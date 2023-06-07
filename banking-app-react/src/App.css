@@ -1,0 +1,163 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.header-style {
+  display: flex;
+}
+
+.header-left-style {
+  margin-left: auto;
+}
+
+.background-style {
+  background-color: #9d45e0;
+  color: white;
+  height: 100vh;
+}
+
+.add-button-style {
+  background-color: white;
+  color: purple;
+  font-weight: bold;
+}
+
+.add-button-style:hover {
+  background-color: white;
+  color: purple;
+  font-weight: bold;
+  transform: scale(1.1);
+}
+
+.standard-page-margin {
+  padding: 2%;
+}
+
+.form-header-style {
+  margin-bottom: 1%;
+  color: #57148b;
+  font-size: x-large;
+  margin-top: 2%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.modal-close-style {
+  font-weight: bold;
+  font-size: small;
+  cursor: pointer;
+  float: right;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.marked-fields-style {
+  text-align: center;
+  font-size: smaller;
+}
+
+.red {
+  color: red;
+}
+
+.close-modal-popup-style {
+  font-weight: bold;
+  font-size: small;
+  cursor: pointer;
+  float: right;
+  color: purple;
+}
+
+.form-field-label-style {
+  color: purple;
+  font-size: medium;
+  font-weight: bold;
+}
+
+.add-form-button-style {
+  background-color: purple;
+  color: white;
+  cursor: pointer;
+}
+
+.add-form-button-style:hover {
+  background-color: purple;
+  color: white;
+  cursor: pointer;
+  transform: scale(1.1);
+}
+
+.add-form-button-style:disabled {
+  background-color: purple;
+  color: white;
+  cursor: not-allowed;
+  transform: scale(1.1);
+}
+
+.table-style {
+  background-color: black;
+  color: white;
+}
+
+.table-style>tbody>tr:nth-child(odd)>td,
+.table-style>tbody>tr:nth-child(odd)>th {
+  color: white;
+  background-color: #420342;
+}
+
+.table-style>tbody>tr:nth-child(even)>td,
+.table-style>tbody>tr:nth-child(even)>th {
+  background-color: rebeccapurple;
+  color: white;
+}
+
+.nav-bar-style {
+  background-color: #550355 !important
+}
+
+.nav-bar-link-style {
+  color: white;
+}
+
+.dashboard-welcome-style {
+  font-size: xxx-large;
+  font-weight: bold;
+}

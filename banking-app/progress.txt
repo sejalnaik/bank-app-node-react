@@ -1,0 +1,9 @@
+1) models for bank, account and user
+2) migrations for bank, account and user
+3) view, service and controller for bank
+4) main index.js file for starting app
+5) view, service and controller for account
+6) view, service and controller for user
+7) transactions added
+8) error handling done
+9) jwt added but not working
