@@ -4,6 +4,9 @@ const { StatusCodes } = require('http-status-codes')
 // Import the account class from view.
 const Account = require('../../../view/account');
 
+// Import the jwt class from middleware.
+const JwtToken = require('../../../middleware/jwt')
+
 // Import the functions from account service.
 const {
     getAllAccounts: getAllAccountsService,
@@ -92,6 +95,12 @@ const createAccount = async (req, resp, next) => {
         // Validate account.
         account.validateAccount()
 
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as created by to bank object.
+        account.createdBy = loggedInUser.userID
+
         // Create bucket for storing the newly created account.
         let newAccount = await createAccountService(account)
 
@@ -133,6 +142,12 @@ const updateAccount = async (req, resp, next) => {
         // Validate account.
         account.validateAccount()
 
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as updated by to bank object.
+        account.updatedBy = loggedInUser.userID
+
         // Create bucket for storing the newly updated account.
         let updateAccount = await updateAccountService(account)
 
@@ -158,6 +173,12 @@ const deleteAccount = async (req, resp, next) => {
 
         // Create bucket for new object of account class for updating.
         let account = Account.createBlankAccountWithID(id)
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as deleted by to bank object.
+        account.deletedBy = loggedInUser.userID
 
         // Create bucket for storing the newly deleted account.
         let deleteAccount = await deleteAccountService(account)

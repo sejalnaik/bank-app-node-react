@@ -4,6 +4,9 @@ const { StatusCodes } = require('http-status-codes')
 // Import the transaction class from view.
 const Transaction = require('../../../view/transaction');
 
+// Import the jwt class from middleware.
+const JwtToken = require('../../../middleware/jwt')
+
 // Import the functions from transaction service.
 const {
     getAllTransactions: getAllTransactionsService,
@@ -92,6 +95,12 @@ const createTransaction = async (req, resp, next) => {
 
         // Validate transaction.
         transaction.validateTransaction()
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as created by to bank object.
+        transaction.createdBy = loggedInUser.userID
 
         // Create bucket for storing the newly created transaction.
         let newTransaction = await createTransactionService(transaction)

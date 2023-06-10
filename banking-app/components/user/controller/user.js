@@ -27,7 +27,7 @@ const getAllUsers = async (req, resp, next) => {
     try {
 
         // Create bucket for storing all users after getting it from service.
-        let allUsers = await getAllUsersService()
+        let allUsers = await getAllUsersService(req.query)
 
         // If no users then send record not found error.
         if (!allUsers) {
@@ -108,6 +108,12 @@ const createUser = async (req, resp, next) => {
         // Validate user.
         user.validateUser()
 
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as created by to user object.
+        user.createdBy = loggedInUser.userID
+
         // Create bucket for storing the newly created user.
         let newUser = await createUserService(user)
 
@@ -155,6 +161,12 @@ const updateUser = async (req, resp, next) => {
         // Validate user.
         user.validateUser()
 
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as updated by to user object.
+        user.updatedBy = loggedInUser.userID
+
         // Create bucket for storing the newly updated user.
         let updateUser = await updateUserService(user)
 
@@ -180,6 +192,12 @@ const deleteUser = async (req, resp, next) => {
 
         // Create bucket for new object of user class for updating.
         let user = User.createBlankUserWithID(id)
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as deleted by to user object.
+        user.deletedBy = loggedInUser.userID
 
         // Create bucket for storing the newly deleted user.
         let deleteUser = await deleteUserService(user)

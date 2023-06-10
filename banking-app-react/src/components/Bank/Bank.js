@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { addBank as addBankService, getBanks as getBanksService, updateBank as updateBankService, deleteBank as deleteBankService } from '../../service/Bank/Bank'
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
@@ -24,6 +24,18 @@ const Bank = () => {
 
     // Variable for add or update object for sending to api.
     let bankForAddUpdate = {}
+
+    // Variable for name search.
+    const nameSearch = useRef()
+
+    // Variable for abbrevieation search.
+    const abbrevieationSearch = useRef()
+
+    // Search varibale for sending search to api.
+    let bankSearchObject = {}
+
+    // Search boolean for saving if is searched state.
+    const [isSearched, setIsSearched] = useState(false)
 
     // ************************************ ADD BANK MODAL POPUP ********************************************
 
@@ -99,8 +111,11 @@ const Bank = () => {
             alert("Bank added successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -108,12 +123,15 @@ const Bank = () => {
     // Get banks.
     const getBanks = async () => {
         try {
-            const response = await getBanksService()
+            const response = await getBanksService(bankSearchObject)
             setBanks(response.data)
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
-                alert(error.message.response.data.error)
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
+                // alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                // alert(error.response.data.error)
             }
         }
     }
@@ -128,8 +146,11 @@ const Bank = () => {
             alert("Bank updated successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -142,8 +163,11 @@ const Bank = () => {
             alert("Bank deleted successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -165,7 +189,7 @@ const Bank = () => {
     const validateForm = () => {
 
         // Remove zero values.
-        removeZeroValue(bank)
+        removeZeroValueFromBank(bank)
 
         // Validate name.
         if (!bank.name.value) {
@@ -228,6 +252,7 @@ const Bank = () => {
         tempBank.id = { value: updateBank.id, error: null, touched: false }
         tempBank.name = { value: updateBank.name, error: null, touched: false }
         tempBank.abbrevieation = { value: updateBank.abbrevieation, error: null, touched: false }
+        tempBank.balance = { value: updateBank.balance, error: null, touched: false }
         setBank(tempBank)
     }
 
@@ -236,6 +261,7 @@ const Bank = () => {
         bank.id = { value: null, error: null, touched: false }
         bank.name = { value: null, error: null, touched: false }
         bank.abbrevieation = { value: null, error: null, touched: false }
+        bank.balance = { value: 0, error: null, touched: false }
     }
 
     // On clicking add bank button.
@@ -249,6 +275,38 @@ const Bank = () => {
         if (window.confirm("Are you sure you want to delete the bank?")) {
             deleteBank(bankID)
         }
+    }
+
+    // ************************************ SEARCH DEFINITIONS ********************************************
+
+    // On search button click.
+    const onSearchClick = (event) => {
+        bankSearchObject.name = nameSearch.current.value
+        bankSearchObject.abbrevieation = abbrevieationSearch.current.value
+        removeZeroValueFiled(bankSearchObject)
+        if (Object.keys(bankSearchObject).length > 0) {
+            setIsSearched(true)
+        }
+        if (Object.keys(bankSearchObject).length == 0) {
+            setIsSearched(false)
+        }
+        getBanks()
+    }
+
+    // On reset search button click.
+    const onResetSearchClick = () => {
+        nameSearch.current.value = null
+        abbrevieationSearch.current.value = null
+        bankSearchObject = {}
+    }
+
+    // On view all button click.
+    const onViewAllClick = () => {
+        nameSearch.current.value = null
+        abbrevieationSearch.current.value = null
+        bankSearchObject = {}
+        setIsSearched(false)
+        getBanks()
     }
 
     // ************************************ COMPONENT RENDER FUNCTIONS ********************************************
@@ -284,22 +342,6 @@ const Bank = () => {
         )
     }
 
-    // Show bank role.
-    const ShowBankRole = ({ isAdmin }) => {
-        if (isAdmin) {
-            return (
-                <div>
-                    Admin
-                </div>
-            )
-        }
-        return (
-            <div>
-                Customer
-            </div>
-        )
-    }
-
     // Render rows of banks for banks table.
     const rowsOfBank = Object.values(banks).map((bank, index) => {
         return (
@@ -307,7 +349,8 @@ const Bank = () => {
                 <td>{index + 1}</td>
                 <td>{bank.name}</td>
                 <td>{bank.abbrevieation}</td>
-                <td>lala</td>
+                <td>{bank.balance}</td>
+                <td>{bank.accounts?.length}</td>
                 <td><Create className='cursor-pointer' onClick={() => { onBankUpdateIconClick(bank) }}></Create></td>
                 <td><Delete className='cursor-pointer' onClick={() => { onBankDeleteButtonClick(bank.id) }}></Delete></td>
             </tr>
@@ -316,11 +359,23 @@ const Bank = () => {
 
     // ************************************ OTHER FUNCTIONS ********************************************
 
-    // Remove zero values from fields of object.
-    const removeZeroValue = obj => {
+    // Remove zero values from fields of bank object.
+    const removeZeroValueFromBank = obj => {
         for (let key in obj) {
+            if (key == "balance") {
+                continue
+            }
             if (obj[key].value === "" || obj[key].value === 0) {
                 obj[key].value = null
+            }
+        }
+    }
+
+    // Remove zero values from fields of object.
+    const removeZeroValueFiled = obj => {
+        for (let key in obj) {
+            if (obj[key] === "" || obj[key] === 0) {
+                delete obj[key]
             }
         }
     }
@@ -335,10 +390,38 @@ const Bank = () => {
                     {/* Add bank button */}
                     <button onClick={onAddBankButtonClick} className="btn btn-default add-button-style">ADD BANK</button>
 
+                    {/* View all button */}
+                    {isSearched && (
+                        <>
+                            &nbsp;&nbsp;&nbsp;
+                            <button onClick={onViewAllClick} className="btn btn-default add-button-style">VIEW ALL</button>
+                        </>
+                    )}
+
                     {/* Pagination */}
                     <div className="header-left-style">
                         yay
                     </div>
+                </div>
+                <br />
+                <div className="header-style">
+
+                    {/* Search */}
+                    <label className="form-field-label-style">Name: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input type="text" className="form-control" placeholder="eg: Yes Bank" ref={nameSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <label className="form-field-label-style">Abbrevieation: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input type="text" className="form-control" placeholder="eg: YB" ref={abbrevieationSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onSearchClick} className="btn btn-default add-button-style">SEARCH</button>
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style">RESET</button>
                 </div>
                 <br /><br />
 
@@ -349,6 +432,7 @@ const Bank = () => {
                             <th scope="col">Sr No</th>
                             <th scope="col">Name</th>
                             <th scope="col">Abbrevieation</th>
+                            <th scope="col">Balance</th>
                             <th scope="col">Count of accounts</th>
                             <th scope="col">Update</th>
                             <th scope="col">Delete</th>
@@ -384,7 +468,7 @@ const Bank = () => {
                             <form>
                                 <div className='row'>
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Name</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Name</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" placeholder="eg: Yes Bank" name="name"
                                                 onChange={onBankFieldChange} onClick={() => setTouchStateOnClick(bank.name)} value={bank.name?.value} />
@@ -393,7 +477,7 @@ const Bank = () => {
                                     </div>
                                     <br /><br /><br />
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Abbrevieation</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Abbrevieation</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" placeholder="eg: YB" name="abbrevieation"
                                                 onChange={onBankFieldChange} onClick={() => setTouchStateOnClick(bank.abbrevieation)} value={bank.abbrevieation?.value} />

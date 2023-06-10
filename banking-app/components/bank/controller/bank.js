@@ -4,6 +4,9 @@ const { StatusCodes } = require('http-status-codes')
 // Import the bank class from view.
 const Bank = require('../../../view/bank');
 
+// Import the jwt class from middleware.
+const JwtToken = require('../../../middleware/jwt')
+
 // Import the functions from bank service.
 const {
     getAllBanks: getAllBanksService,
@@ -20,7 +23,7 @@ const getAllBanks = async (req, resp, next) => {
     try {
 
         // Create bucket for storing all banks after getting it from service.
-        let allBanks = await getAllBanksService()
+        let allBanks = await getAllBanksService(req.query)
 
         // If no banks then send record not found error.
         if (!allBanks) {
@@ -83,11 +86,20 @@ const createBank = async (req, resp, next) => {
         // Get the abbrevieation from request body.
         let abbrevieation = req.body.abbrevieation
 
+        // Get the balance from request body.
+        let balance = req.body.balance
+
         // Create bucket for new object of bank class for adding.
-        let bank = new Bank(name, abbrevieation)
+        let bank = new Bank(name, abbrevieation, balance)
 
         // Validate bank.
         bank.validateBank()
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as created by to bank object.
+        bank.createdBy = loggedInUser.userID
 
         // Create bucket for storing the newly created bank.
         let newBank = await createBankService(bank)
@@ -118,11 +130,20 @@ const updateBank = async (req, resp, next) => {
         // Get the abbrevieation from request body.
         let abbrevieation = req.body.abbrevieation
 
+        // Get the balance from request body.
+        let balance = req.body.balance
+
         // Create bucket for new object of bank class for updating.
-        let bank = Bank.createBankWithID(id, name, abbrevieation)
+        let bank = Bank.createBankWithID(id, name, abbrevieation, balance)
 
         // Validate bank.
         bank.validateBank()
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as updated by to bank object.
+        bank.updatedBy = loggedInUser.userID
 
         // Create bucket for storing the newly updated bank.
         let updateBank = await updateBankService(bank)
@@ -149,6 +170,12 @@ const deleteBank = async (req, resp, next) => {
 
         // Create bucket for new object of bank class for updating.
         let bank = Bank.createBlankBankWithID(id)
+
+        // Get the logged in user id from token.
+        loggedInUser = JwtToken.decodeToken(req.headers.authorization)
+
+        // Give the user id as deleted by to bank object.
+        bank.deletedBy = loggedInUser.userID
 
         // Create bucket for storing the newly deleted bank.
         let deleteBank = await deleteBankService(bank)

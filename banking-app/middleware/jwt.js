@@ -7,10 +7,9 @@ const CustomError = require('../errors')
 
 // Create the jwt class.
 class JwtToken {
-  constructor(id, email, password) {
+  constructor(id, email) {
     this.userID = id
     this.email = email
-    this.password = password
   }
 
   // Create the payload instance.
@@ -18,7 +17,6 @@ class JwtToken {
     return {
       userID: this.userID,
       email: this.email,
-      password: this.password,
     }
   }
 
@@ -30,8 +28,8 @@ class JwtToken {
 
     // Create object literal of jwt.
     const tempJWT = {
-      userID: this.id,
-      email: this.id
+      userID: this.userID,
+      email: this.email
     }
 
     // Create the token.
@@ -39,6 +37,24 @@ class JwtToken {
 
     // Return the token.
     return token
+  }
+
+  // Decode the token.
+  static decodeToken(token) {
+
+    // Declare the secret key.
+    const SECRET_KEY = "ImmaBest"
+
+    // Decipher the token. 
+    const decoded = jwt.verify(token, SECRET_KEY)
+
+    const user = {
+      userID: decoded.userID,
+      email: decoded.email
+    }
+
+    // Return the token.
+    return user
   }
 
   // Authenticate the token coming from front end for login through cookie.
@@ -81,12 +97,6 @@ class JwtToken {
       if (!token) {
         throw new CustomError.UnauthorizedError("token not provided")
       }
-
-      // Declare the secret key.
-      const SECRET_KEY = "ImmaBest"
-
-      // Decipher the token. 
-      const decoded = jwt.verify(token, SECRET_KEY)
 
       // Go to next middleware.
       next()

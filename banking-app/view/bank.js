@@ -1,5 +1,5 @@
 // Take db of index.js from models folder.
-const db = require("../models/transaction")
+const db = require("../models/index")
 
 // Import uuid.
 const uuid = require("uuid")
@@ -12,10 +12,11 @@ const { Op } = require("sequelize");
 
 // Create bank class with attributes and functions.
 class Bank {
-    constructor(name, abbrevieation) {
+    constructor(name, abbrevieation, balance) {
         this.id = uuid.v4()
         this.name = name
         this.abbrevieation = abbrevieation
+        this.balance = balance
     }
 
     // This function is for when id is there and needs to create a blank bank.
@@ -26,8 +27,8 @@ class Bank {
     }
 
     // This function is for when id and other fields are there.
-    static createBankWithID(id, name, abbrevieation) {
-        const bank = new Bank(name, abbrevieation)
+    static createBankWithID(id, name, abbrevieation, balance) {
+        const bank = new Bank(name, abbrevieation, balance)
         bank.id = id
         return bank
     }
@@ -50,14 +51,26 @@ class Bank {
         if (this.abbrevieation.length > 100) {
             throw new CustomError.BadRequestError("Abbrevieation can contain upto 100 characters")
         }
+
+        // Balance.
+        if (this.balance == null) {
+            throw new CustomError.BadRequestError("Balance must be specified")
+        }
+        if (this.balance < 0) {
+            throw new CustomError.BadRequestError("Balance cannot be less than 0")
+        }
+        if (this.balance > 100000000000) {
+            throw new CustomError.BadRequestError("Balance cannot be more than 100000000000")
+        }
     }
 
     // Create function for getting all banks. 
-    static async getAllBanks(transaction) {
+    static async getAllBanks(transaction, searchQueries) {
         try {
 
             // Create bucket for all banks and fetch it form db.
             let allBanks = await db.bank.findAll({
+                where: searchQueries,
                 include: [
                     {
                         model: db.account,
@@ -163,8 +176,9 @@ class Bank {
             let newBank = await db.bank.create({
                 id: this.id,
                 name: this.name,
+                balance: this.balance,
                 abbrevieation: this.abbrevieation,
-                createdBy: uuid.NIL,
+                createdBy: this.createdBy,
                 updatedBy: uuid.NIL
             }, {
                 transaction: transaction
@@ -187,7 +201,9 @@ class Bank {
             // Create bucket for one bank and update it in db.
             let updateBank = await db.bank.update({
                 name: this.name,
-                abbrevieation: this.abbrevieation
+                balance: this.balance,
+                abbrevieation: this.abbrevieation,
+                updatedBy: this.updatedBy
             },
                 {
                     where: {
@@ -212,13 +228,17 @@ class Bank {
         try {
 
             // Create bucket for one bank and delete it from db.
-            let deleteBank = await db.bank.destroy(
+            let deleteBank = await db.bank.update({
+                deletedAt: new Date(),
+                deletedBy: this.deletedBy
+            },
                 {
                     where: {
                         id: this.id
                     }
-                }
-            )
+                }, {
+                transaction: transaction
+            })
 
             // Return the bucket.
             return deleteBank

@@ -16,21 +16,22 @@ import User from './components/User/User';
 import Bank from './components/Bank/Bank';
 import Account from './components/Account/Account';
 import Dashboard from './components/Dashboard/Dashboard';
-import React from 'react'
+import React, { useState } from 'react'
 import { Route, Routes } from "react-router-dom";
 import Login from './components/Login/Login';
 import { getLocalStorage as getLocalStorageService } from './service/Utility/LocalStorage'
 import Redirect from './components/Shared/Redirect';
+import Transaction from './components/Transaction/Transaction';
 
 function App() {
 
   // ************************************ VARIABLE DEFINITIONS ********************************************
 
-  // Variable for isLoggedIn.
-  let isLoggedIn = getLocalStorageService("isLoggedIn")
-
   // Variable for isAdmin.
-  let isAdmin = getLocalStorageService("isAdmin")
+  let [isAdmin, setIsAdmin] = useState(getLocalStorageService("isAdmin") ? getLocalStorageService("isAdmin") : null)
+
+  // Variable for .
+  let [isLoggedIn, setIsLoggedIn] = useState(getLocalStorageService("isLoggedIn") ? getLocalStorageService("isLoggedIn") : null)
 
   // ***************************** IGNORE ********************************
   // const user = {
@@ -40,14 +41,17 @@ function App() {
 
   return (
     <div className="App">
-      <Navbar isShow={isLoggedIn} />
+      <Navbar setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} isLoggedIn={isLoggedIn} />
+      {!isLoggedIn ? <Login setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} /> : <></>}
       <Routes>
 
         {/* If authorized and not admin then go to the specific routes. */}
-        {isLoggedIn ? isAdmin == "false" ? (
+        {isLoggedIn ? (isAdmin == null || isAdmin == "false") ? (
           <>
             <Route exact path='/account' element={<Account />} />
             <Route exact path='/dashboard' element={<Dashboard />} />
+            <Route exact path='/' element={<Dashboard />} />
+            <Route exact path='/transaction' element={<Transaction />} />
           </>
         ) : (
 
@@ -57,6 +61,7 @@ function App() {
             <Route exact path='/account' element={<Account />} />
             <Route exact path='/user' element={<User />} />
             <Route exact path='/dashboard' element={<Dashboard />} />
+            <Route exact path='/' element={<Dashboard />} />
           </>
         )
           :
@@ -67,11 +72,12 @@ function App() {
               <Route exact path="/account" element={<Redirect />} />
               <Route exact path="/user" element={<Redirect />} />
               <Route exact path="/dashboard" element={<Redirect />} />
+              <Route exact path="/transaction" element={<Redirect />} />
             </>
           )
         }
-        <Route exact path="/" element={<Login />} />
-        <Route exact path="/login" element={<Login />} />
+        {/* <Route exact path="/" element={<Login />} /> */}
+        {/* <Route exact path="/login" element={<Login />} /> */}
       </Routes>
 
       {/* ***************************** IGNORE ******************************** */}

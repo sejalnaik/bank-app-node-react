@@ -6,5 +6,10 @@ export const setLocalStorage = (key, item) => {
 
 // Get the local storage item.
 export const getLocalStorage = (key) => {
-   return localStorage.getItem(key)
+    return localStorage.getItem(key)
+}
+
+// Get the local storage item.
+export const clearLocalStorage = () => {
+    return localStorage.clear()
 }

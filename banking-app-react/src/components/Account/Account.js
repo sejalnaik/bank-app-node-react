@@ -33,6 +33,9 @@ const Account = () => {
     // Create user id after getting it from local storage.
     let userID = getLocalStorageService("userID")
 
+    // Create isAdmin after getting it from local storage.
+    let isAdmin = getLocalStorageService("isAdmin")
+
     // ************************************ ADD ACCOUNT MODAL POPUP ********************************************
 
     // Variable for open state of add account modal.
@@ -80,9 +83,9 @@ const Account = () => {
         }
     }, [isAddOperation])
 
-    // Validate account.
+    // Print accounts.
     useEffect(() => {
-        console.log(accounts)
+        // console.log(accounts)
     }, [accounts])
 
     // Initial functions.
@@ -110,8 +113,11 @@ const Account = () => {
             alert("Account added successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -123,8 +129,11 @@ const Account = () => {
             setAccounts(response.data)
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
-                alert(error.message.response.data.error)
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
+                // alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                // alert(error.response.data.error)
             }
         }
     }
@@ -139,8 +148,11 @@ const Account = () => {
             alert("Account updated successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -153,8 +165,11 @@ const Account = () => {
             alert("Account deleted successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -276,7 +291,7 @@ const Account = () => {
     const getBankList = async () => {
         try {
             const response = await getBanksService()
-            response.data.unshift({id:"", name: "Select"})
+            response.data.unshift({ id: "", name: "Select" })
             setBankList(response.data)
         } catch (error) {
             console.error(error)
@@ -325,9 +340,9 @@ const Account = () => {
                 <td>{account.bank?.name}</td>
                 <td>{account.user?.firstName + " " + account.user?.lastName}</td>
                 <td>{account.balance}</td>
-                <td>lala</td>
-                <td><Create className='cursor-pointer' onClick={() => { onAccountUpdateIconClick(account) }}></Create></td>
-                <td><Delete className='cursor-pointer' onClick={() => { onAccountDeleteButtonClick(account.id) }}></Delete></td>
+                {isAdmin == "false" ? <td>lala</td> : <></>}
+                {isAdmin == "true" ? <td><Delete className='cursor-pointer' onClick={() => { onAccountDeleteButtonClick(account.id) }}></Delete></td> : <></>}
+                {/* <td><Create className='cursor-pointer' onClick={() => { onAccountUpdateIconClick(account) }}></Create></td> */}
             </tr>
         )
     })
@@ -358,7 +373,7 @@ const Account = () => {
                 <div className="header-style">
 
                     {/* Add account button */}
-                    <button onClick={onAddAccountButtonClick} className="btn btn-default add-button-style">ADD ACCOUNT</button>
+                    {isAdmin == "false" ? <button onClick={onAddAccountButtonClick} className="btn btn-default add-button-style">ADD ACCOUNT</button> : <></>}
 
                     {/* Pagination */}
                     <div className="header-left-style">
@@ -376,9 +391,9 @@ const Account = () => {
                             <th scope="col">Bank</th>
                             <th scope="col">User</th>
                             <th scope="col">Balance</th>
-                            <th scope="col">Show Passbook</th>
-                            <th scope="col">Update</th>
-                            <th scope="col">Delete</th>
+                            {isAdmin == "false" ? <th scope="col">Show Passbook</th> : <></>}
+                            {/* <th scope="col">Update</th> */}
+                            {isAdmin == "true" ? <th scope="col">Delete</th> : <></>}
                         </tr>
                     </thead>
                     <tbody>
@@ -411,7 +426,7 @@ const Account = () => {
                             <form>
                                 <div className='row'>
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Bank</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Bank</label>
                                         <div className="col-sm-10">
                                             <select className="form-control" name="bankID" onChange={onAccountFieldChange} value={account.bankID?.value}
                                                 onClick={() => setTouchStateOnClick(account.bankID)}>
@@ -423,7 +438,7 @@ const Account = () => {
                                     </div>
                                     <br /><br /><br />
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Balance</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Balance</label>
                                         <div className="col-sm-10">
                                             <input type="number" className="form-control" placeholder="eg: 500" name="balance"
                                                 onChange={onAccountFieldChange} onClick={() => setTouchStateOnClick(account.balance)} value={account.balance?.value} />

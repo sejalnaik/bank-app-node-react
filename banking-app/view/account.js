@@ -1,5 +1,5 @@
 // Take db of index.js from models folder.
-const db = require("../models/transaction")
+const db = require("../models/index")
 
 // Import uuid.
 const uuid = require("uuid")
@@ -143,7 +143,7 @@ class Account {
                 balance: this.balance,
                 bank_id: this.bankID,
                 user_id: this.userID,
-                createdBy: uuid.NIL,
+                createdBy: this.createdBy,
                 updatedBy: uuid.NIL
             }, {
                 transaction: transaction
@@ -169,6 +169,7 @@ class Account {
                 balance: this.balance,
                 bank_id: this.bankID,
                 user_id: this.userID,
+                updatedBy: this.updatedBy
             },
                 {
                     where: {
@@ -193,13 +194,17 @@ class Account {
         try {
 
             // Create bucket for one account and delete it from db.
-            let deleteAccount = await db.account.destroy(
+            let deleteAccount = await db.account.update({
+                deletedAt: new Date(),
+                deletedBy: this.deletedBy
+            },
                 {
                     where: {
                         id: this.id
                     }
-                }
-            )
+                }, {
+                transaction: transaction
+            })
 
             // Return the bucket.
             return deleteAccount

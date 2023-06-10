@@ -1,5 +1,5 @@
 // Take db of index.js from models folder.
-const db = require("../models/transaction")
+const db = require("../models/index")
 
 // Import uuid.
 const uuid = require("uuid")
@@ -8,7 +8,7 @@ const uuid = require("uuid")
 const CustomError = require('../errors')
 
 // Import Op from sequilize.
-const { Op } = require("sequelize");
+const { Op } = require("sequelize")
 
 // Create user class with attributes and functions.
 class User {
@@ -80,23 +80,30 @@ class User {
         }
 
         // Total balance.
-        if (!this.totalBalance) {
+        if (this.totalBalance == null) {
             throw new CustomError.BadRequestError("Total balance must be specified")
         }
-        if (this.totalBalance < 500) {
-            throw new CustomError.BadRequestError("Total balance cannot be less than 500")
+        if (this.totalBalance < 0) {
+            throw new CustomError.BadRequestError("Total balance cannot be less than 0")
         }
         if (this.totalBalance > 100000000000) {
-            throw new CustomError.BadRequestError("Total balance cannot be more than 500")
+            throw new CustomError.BadRequestError("Total balance cannot be more than 100000000000")
         }
     }
 
     // Create function for getting all users. 
-    static async getAllUsers(transaction) {
+    static async getAllUsers(transaction, searchQueries) {
         try {
 
             // Create bucket for all users and fetch it form db.
             let allUsers = await db.user.findAll({
+                where: searchQueries,
+                include: [
+                    {
+                        model: db.account,
+                    }
+                ],
+            }, {
                 transaction: transaction
             })
 
@@ -170,7 +177,7 @@ class User {
                 totalBalance: this.totalBalance,
                 password: this.password,
                 isAdmin: this.isAdmin,
-                createdBy: uuid.NIL,
+                createdBy: this.createdBy,
                 updatedBy: uuid.NIL
             }, {
                 transaction: transaction
@@ -195,8 +202,10 @@ class User {
                 firstName: this.firstName,
                 lastName: this.lastName,
                 email: this.email,
+                password: this.password,
                 totalBalance: this.totalBalance,
                 isAdmin: this.isAdmin,
+                updatedBy: this.updatedBy
             },
                 {
                     where: {
@@ -221,13 +230,17 @@ class User {
         try {
 
             // Create bucket for one user and delete it from db.
-            let deleteUser = await db.user.destroy(
+            let deleteUser = await db.user.update({
+                deletedAt: new Date(),
+                deletedBy: this.deletedBy
+            },
                 {
                     where: {
                         id: this.id
                     }
-                }
-            )
+                }, {
+                transaction: transaction
+            })
 
             // Return the bucket.
             return deleteUser

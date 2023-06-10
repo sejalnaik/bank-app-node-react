@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
   bank.init({
     name: DataTypes.STRING,
     abbrevieation: DataTypes.STRING,
+    balance: DataTypes.DECIMAL,
     createdBy: DataTypes.UUID,
     updatedBy: DataTypes.UUID,
     deletedBy: DataTypes.UUID

@@ -25,7 +25,23 @@ module.exports = (sequelize, DataTypes) => {
           name: 'user_id',
           type: DataTypes.UUID
         }
-      })
+      });
+      account.hasMany(models.transaction, {
+        onDelete: 'RESTRICT',
+        onUpdate: 'RESTRICT',
+        foreignKey: {
+          name: 'account_id',
+          type: DataTypes.UUID
+        }
+      });
+      account.hasMany(models.transaction, {
+        onDelete: 'RESTRICT',
+        onUpdate: 'RESTRICT',
+        foreignKey: {
+          name: 'to_account_id',
+          type: DataTypes.UUID
+        }
+      });
     }
   }
   account.init({

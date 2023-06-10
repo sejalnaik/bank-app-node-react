@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { addUser as addUserService, getUsers as getUsersService, updateUser as updateUserService, deleteUser as deleteUserService } from '../../service/User/User'
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Create from '@mui/icons-material/Create';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
+import { getLocalStorage as getLocalStorageService } from '../../service/Utility/LocalStorage'
 
 const User = () => {
 
@@ -24,6 +25,24 @@ const User = () => {
 
     // Variable for add or update object for sending to api.
     let userForAddUpdate = {}
+
+    // Variable for first name search.
+    const firstNameSearch = useRef()
+
+    // Variable for last name search.
+    const lastNameSearch = useRef()
+
+    // Variable for email search.
+    const emailSearch = useRef()
+
+    // Variable for isAdmin search.
+    const isAdminSearch = useRef()
+
+    // Search varibale for sending search to api.
+    let userSearchObject = {}
+
+    // Search boolean for saving if is searched state.
+    const [isSearched, setIsSearched] = useState(false)
 
     // ************************************ ADD USER MODAL POPUP ********************************************
 
@@ -74,7 +93,7 @@ const User = () => {
 
     // Validate user.
     useEffect(() => {
-        // console.log(users)
+        console.log(users)
     }, [users])
 
     // Initial functions.
@@ -99,8 +118,11 @@ const User = () => {
             alert("User added successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -112,8 +134,11 @@ const User = () => {
             setUsers(response.data)
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
-                alert(error.message.response.data.error)
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
+                // alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                // alert(error.response.data.error)
             }
         }
     }
@@ -128,8 +153,11 @@ const User = () => {
             alert("User updated successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -142,8 +170,11 @@ const User = () => {
             alert("User deleted successfully")
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -202,22 +233,6 @@ const User = () => {
         }
         if (user.password.value && user.password.value.length > 100) {
             user.password.error = "Password can contain upto 100 characters"
-        }
-
-        // Validate total balance.
-        if (!user.totalBalance.value) {
-            user.totalBalance.error = "Total balance must be specified"
-        }
-
-        // If total balance exists then convert total balance from string to number and validate.
-        if (user.totalBalance.value) {
-            user.totalBalance.value = +user.totalBalance.value
-            if (user.totalBalance.value < 500) {
-                user.totalBalance.error = "Total balance cannot be less than 500"
-            }
-            if (user.totalBalance.value > 100000000000) {
-                user.totalBalance.error = "Total balance cannot be more than 100000000000"
-            }
         }
 
         // Check if user field has any error value, if eror then keep the add button in form disabled.
@@ -279,7 +294,7 @@ const User = () => {
         user.lastName = { value: null, error: null, touched: false }
         user.email = { value: null, error: null, touched: false }
         user.password = { value: null, error: null, touched: false }
-        user.totalBalance = { value: null, error: null, touched: false }
+        user.totalBalance = { value: 0, error: null, touched: false }
         user.isAdmin = { value: false, error: null, touched: false }
     }
 
@@ -294,6 +309,44 @@ const User = () => {
         if (window.confirm("Are you sure you want to delete the user?")) {
             deleteUser(userID)
         }
+    }
+
+    // ************************************ SEARCH DEFINITIONS ********************************************
+
+    // On search button click.
+    const onSearchClick = (event) => {
+        userSearchObject.firstName = firstNameSearch.current.value
+        userSearchObject.lastName = lastNameSearch.current.value
+        userSearchObject.email = emailSearch.current.value
+        userSearchObject.isAdmin = isAdminSearch.current.value
+        removeZeroValueFiled(userSearchObject)
+        if (Object.keys(userSearchObject).length > 0) {
+            setIsSearched(true)
+        }
+        if (Object.keys(userSearchObject).length == 0) {
+            setIsSearched(false)
+        }
+        getUsers()
+    }
+
+    // On reset search button click.
+    const onResetSearchClick = () => {
+        firstNameSearch.current.value = null
+        lastNameSearch.current.value = null
+        emailSearch.current.value = null
+        isAdminSearch.current.value = null
+        userSearchObject = {}
+    }
+
+    // On view all button click.
+    const onViewAllClick = () => {
+        firstNameSearch.current.value = null
+        lastNameSearch.current.value = null
+        emailSearch.current.value = null
+        isAdminSearch.current.value = null
+        userSearchObject = {}
+        setIsSearched(false)
+        getUsers()
     }
 
     // ************************************ COMPONENT RENDER FUNCTIONS ********************************************
@@ -329,58 +382,19 @@ const User = () => {
         )
     }
 
-    // Show user role.
-    const ShowUserRole = ({ isAdmin }) => {
-        if (isAdmin) {
-            return (
-                <div>
-                    Admin
-                </div>
-            )
-        }
-        return (
-            <div>
-                Customer
-            </div>
-        )
-    }
-
     // Render rows of users for users table.
     const rowsOfUser = Object.values(users).map((user, index) => {
-        if (user.isAdmin) {
-            return (
-                <tr key={user.id}>
-                    <td>{index + 1}</td>
-                    <td>{user.firstName + " " + user.lastName}</td>
-                    <td>Admin</td>
-                    <td>lala</td>
-                    <td><Create className='cursor-pointer' onClick={() => { onUserUpdateIconClick(user) }}></Create></td>
-                    <td><Delete className='cursor-pointer' onClick={() => { onUserDeleteButtonClick(user.id) }}></Delete></td>
-                </tr>
-            )
-        }
         return (
             <tr key={user.id}>
                 <td>{index + 1}</td>
                 <td>{user.firstName + " " + user.lastName}</td>
-                <td>Customer</td>
-                <td>lala</td>
+                {user.isAdmin ? <td>Admin</td> : <td>Customer</td>}
+                <td>{user.totalBalance}</td>
+                <td>{user.accounts?.length}</td>
                 <td><Create className='cursor-pointer' onClick={() => { onUserUpdateIconClick(user) }}></Create></td>
                 <td><Delete className='cursor-pointer' onClick={() => { onUserDeleteButtonClick(user.id) }}></Delete></td>
             </tr>
         )
-
-        // Doubt block.
-        // return (
-        //     <tr key={user.id}>
-        //         <td>{index + 1}</td>
-        //         <td>{user.firstName + " " + user.lastName}</td>
-        //         <td><ShowUserRole field={user.isAdmin} /></td>
-        //         <td>lala</td>
-        //         <td><Create></Create></td>
-        //         <td><Delete></Delete></td>
-        //     </tr>
-        // )
     })
 
     // ************************************ OTHER FUNCTIONS ********************************************
@@ -388,8 +402,20 @@ const User = () => {
     // Remove zero values from fields of object.
     const removeZeroValue = obj => {
         for (let key in obj) {
+            if (key == "totalBalance") {
+                continue
+            }
             if (obj[key].value === "" || obj[key].value === 0) {
                 obj[key].value = null
+            }
+        }
+    }
+
+    // Remove zero values from fields of object.
+    const removeZeroValueFiled = obj => {
+        for (let key in obj) {
+            if (obj[key] === "" || obj[key] === 0) {
+                delete obj[key]
             }
         }
     }
@@ -409,6 +435,38 @@ const User = () => {
                         yay
                     </div>
                 </div>
+                <br />
+                <div className="header-style">
+
+                    {/* Search */}
+                    <label className="form-field-label-style">First Name: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input type="text" className="form-control" placeholder="eg: Sejal" ref={firstNameSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <label className="form-field-label-style">Last Name: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input type="text" className="form-control" placeholder="eg: Naik" ref={lastNameSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <label className="form-field-label-style">Email: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input type="text" className="form-control" placeholder="eg: sejal@gmail.com" ref={emailSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <label className="form-field-label-style">Is Admin: </label>
+                    &nbsp;&nbsp;&nbsp;
+                    <div>
+                        <input className="form-check-input" type="checkbox" ref={isAdminSearch} />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onSearchClick} className="btn btn-default add-button-style">SEARCH</button>
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style">RESET</button>
+                </div>
                 <br /><br />
 
                 {/* Table of users */}
@@ -418,6 +476,7 @@ const User = () => {
                             <th scope="col">Sr No</th>
                             <th scope="col">Name</th>
                             <th scope="col">Role</th>
+                            <th scope="col">Balance</th>
                             <th scope="col">No of accounts</th>
                             <th scope="col">Update</th>
                             <th scope="col">Delete</th>
@@ -453,7 +512,7 @@ const User = () => {
                             <form>
                                 <div className='row'>
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">First Name</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>First Name</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" placeholder="eg: sejal" name="firstName"
                                                 onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.firstName)} value={user.firstName?.value} />
@@ -462,7 +521,7 @@ const User = () => {
                                     </div>
                                     <br /><br /><br />
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Last Name</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Last Name</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" placeholder="eg: naik" name="lastName"
                                                 onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.lastName)} value={user.lastName?.value} />
@@ -471,7 +530,7 @@ const User = () => {
                                     </div>
                                     <br /><br /><br />
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Email</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Email</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" placeholder="eg: sej@gmail.com" name="email"
                                                 onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.email)} value={user.email?.value} />
@@ -480,20 +539,11 @@ const User = () => {
                                     </div>
                                     <br /><br /><br />
                                     <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Password</label>
+                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Password</label>
                                         <div className="col-sm-10">
                                             <input type="text" className="form-control" name="password" placeholder="eg: abc@123"
                                                 onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.password)} value={user.password?.value} />
                                             <ShowErrorMessage field={user.password} />
-                                        </div>
-                                    </div>
-                                    <br /><br /><br />
-                                    <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style">Total Balance</label>
-                                        <div className="col-sm-10">
-                                            <input type="number" className="form-control" placeholder="eg: 500" name="totalBalance"
-                                                onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.totalBalance)} value={user.totalBalance?.value} />
-                                            <ShowErrorMessage field={user.totalBalance} />
                                         </div>
                                     </div>
                                     <br /><br /><br />

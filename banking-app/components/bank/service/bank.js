@@ -1,26 +1,35 @@
 // Take bank class of index.js from bank folder.
 const Bank = require('../../../view/bank');
 
+// Take user class of index.js from user folder.
+const User = require('../../../view/user');
+
 // Take db of index.js from models folder.
-const db = require("../../../models/transaction")
+const db = require("../../../models/index")
 
 // Take exports of index.js from error folder.
 const CustomError = require('../../../errors')
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
 // Create function for get all banks.
-const getAllBanks = async () => {
+const getAllBanks = async (params) => {
 
     // Start new transaction.
     const transaction = await db.sequelize.transaction()
 
     try {
 
-        // Create bucket for storing all banks after getting it from view.
-        const allBanks = await Bank.getAllBanks(transaction)
+        // Format the search queries.
+        const searchQueries = addSearchQueries(params)
 
-        // If no banks found then send error.
-        if (!allBanks || (allBanks && allBanks.length == 0)) {
-            throw new CustomError.BadRequestError("Banks not found")
+        // Create bucket for storing all banks after getting it from view.
+        const allBanks = await Bank.getAllBanks(transaction, searchQueries)
+
+        // If no banks found then send empty array.
+        if (!allBanks) {
+            allBanks = []
         }
 
         // Commit the transaction.
@@ -91,6 +100,13 @@ const createBank = async (bankObj) => {
             throw new CustomError.BadRequestError("Bank abbrevieation already exists")
         }
 
+        // Check if created by exists in db.
+        const checkUser = User.createBlankUserWithID(bankObj.createdBy)
+        const userForExists = await checkUser.getUserByID(transaction)
+        if (!userForExists) {
+            throw new CustomError.BadRequestError("User not found")
+        }
+
         // Create bucket for storing new bank after getting it from view.
         let newBank = await bankObj.createBank(transaction)
 
@@ -130,6 +146,13 @@ const updateBank = async (bankObj) => {
             throw new CustomError.BadRequestError("Bank abbrevieation already exists")
         }
 
+        // Check if updated by exists in db.
+        const checkUser = User.createBlankUserWithID(bankObj.updatedBy)
+        const userForExists = await checkUser.getUserByID(transaction)
+        if (!userForExists) {
+            throw new CustomError.BadRequestError("User not found")
+        }
+
         // Create bucket for storing updated bank after getting it from view.
         let updateBank = await bankObj.updateBank(transaction)
 
@@ -157,6 +180,13 @@ const deleteBank = async (bankObj) => {
 
     try {
 
+        // Check if deleted by exists in db.
+        const checkUser = User.createBlankUserWithID(bankObj.deletedBy)
+        const userForExists = await checkUser.getUserByID(transaction)
+        if (!userForExists) {
+            throw new CustomError.BadRequestError("User not found")
+        }
+
         // Create bucket for storing deleted bank after getting it from view.
         let deleteBank = await bankObj.deleteBank(transaction)
 
@@ -174,6 +204,28 @@ const deleteBank = async (bankObj) => {
         // Return error.
         throw error
     }
+}
+
+// Add search queries to  query.
+const addSearchQueries = (params) => {
+
+    // Create bucket for where query.
+    let where = {}
+
+    // Name.
+    if (params.name) {
+        where.name = {
+            [Op.iLike]: "%" + params.name.toLowerCase() + "%"
+        }
+    }
+
+    // Abbrevieation.
+    if (params.abbrevieation) {
+        where.abbrevieation = {
+            [Op.iLike]: "%" + params.abbrevieation + "%"
+        }
+    }
+    return where
 }
 
 // Export all the functions.

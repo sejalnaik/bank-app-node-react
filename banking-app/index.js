@@ -5,7 +5,7 @@ const router = require("./components")
 const cookieParser = require('cookie-parser')
 
 // Take db of index.js from models folder.
-const db = require("./models/transaction")
+const db = require("./models/index")
 
 // Import express.
 const express = require("express")

@@ -16,7 +16,7 @@ const { getAllUsers,
 userRouter.get("/", JwtToken.authenticationMiddleware, getAllUsers)
 
 // Give path for create user and provide function for it.
-userRouter.post("/", createUser)
+userRouter.post("/", JwtToken.authenticationMiddleware, createUser)
 
 // Give path for update user and provide function for it.
 userRouter.put("/", JwtToken.authenticationMiddleware, updateUser)

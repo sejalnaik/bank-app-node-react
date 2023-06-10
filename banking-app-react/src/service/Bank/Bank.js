@@ -16,11 +16,11 @@ export const addBank = async (bank) => {
 }
 
 // Get banks.
-export const getBanks = async () => {
+export const getBanks = async (params) => {
     try {
         const authorization = getLocalStorageService("authorization")
         const response = await axios.get(`${constants.BASE_URL}/bank`, {
-            headers: { "Content-type": "application/json", "authorization": authorization }
+            headers: { "Content-type": "application/json", "authorization": authorization }, params: params
         })
         return response
     } catch (error) {

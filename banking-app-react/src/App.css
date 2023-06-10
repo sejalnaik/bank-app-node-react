@@ -161,3 +161,47 @@
   font-size: xxx-large;
   font-weight: bold;
 }
+
+.menu-text-style {
+  color: white;
+  margin-right: 10px;
+}
+
+.lala {
+  position: absolute;
+  transition: .5s;
+  background-color: dodgerblue;
+  padding: 10px;
+  height: 40px;
+  width: 150px;
+}
+
+.resgiter-button-style {
+  position: absolute;
+  transition: .5s;
+}
+
+.transaction-button-group-style {
+  display: inline-flex;
+}
+
+.transaction-button-style {
+  margin: 10px 67px 10px 70px;
+  background-color: purple;
+  color: white;
+  cursor: pointer;
+  padding: 10px 40px 10px 40px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.input-style {
+  margin: auto;
+  width: 50%;
+}
+
+.account-text-style {
+  color: white;
+  font-size: xxx-large;
+  font-weight: bold;
+}

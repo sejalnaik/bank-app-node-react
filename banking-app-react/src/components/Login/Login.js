@@ -1,10 +1,10 @@
 import { login as loginService } from '../../service/User/User'
 import { setLocalStorage as setLocalStorageService } from '../../service/Utility/LocalStorage'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from "react-router-dom";
 import { getLocalStorage as getLocalStorageService } from '../../service/Utility/LocalStorage'
 
-const Login = () => {
+const Login = ({ setIsLoggedIn, setIsAdmin }) => {
 
     // ************************************ VARIABLE DEFINITIONS ********************************************
 
@@ -19,6 +19,9 @@ const Login = () => {
 
     // Variable for navigation.
     const navigate = useNavigate()
+
+    // Create variable for useref.
+    const registerButton = useRef()
 
     // ************************************ USEEFFECT FUNCTIONS ********************************************
 
@@ -57,11 +60,16 @@ const Login = () => {
             setLocalStorageService("firstName", response.data.firstName)
             setLocalStorageService("lastName", response.data.lastName)
             setLocalStorageService("isLoggedIn", true)
+            setIsLoggedIn(true)
+            setIsAdmin(true)
             navigate('/dashboard')
         } catch (error) {
             console.error(error)
-            if (error && error.message && error.message.response && error.message.response.data && error.message.response.data.error) {
+            if ((error && error.message && error.message.response && error.message.response.data && error.message.response.data.error)) {
                 alert(error.message.response.data.error)
+            }
+            if (error && error.response && error.response.data && error.response.data.error) {
+                alert(error.response.data.error)
             }
         }
     }
@@ -126,7 +134,15 @@ const Login = () => {
     const onLoginClick = (event) => {
         event.preventDefault()
         login()
+    }
 
+    // On hover regsiter button.
+    const onHoverRegisterButton = () => {
+        if (!disabled) {
+            return
+        }
+        registerButton.current.style.left = `${Math.ceil(Math.random() * 50)}%`
+        registerButton.current.style.top = `${Math.ceil(Math.random() * 50)}%`
     }
 
     // Format the user object before sending it through API.
@@ -174,29 +190,27 @@ const Login = () => {
         <>
             <div className="container-fluid mt-n5 background-style standard-page-margin">
                 <form>
-                    <div className='row'>
-                        <div className="form-group">
-                            <label className="col-sm-2 form-field-label-style">Email</label>
-                            <div className="col-sm-10">
-                                <input type="text" className="form-control" placeholder="eg: sej@gmail.com" name="email"
-                                    onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.email)} value={user.email?.value} />
-                                <ShowErrorMessage field={user.email} />
-                            </div>
+                    <div className="form-group input-style">
+                        <label className="form-field-label-style">Email</label>
+                        <div>
+                            <input type="text" className="form-control" placeholder="eg: sej@gmail.com" name="email"
+                                onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.email)} value={user.email?.value} />
+                            <ShowErrorMessage field={user.email} />
                         </div>
-                        <br /><br /><br />
-                        <div className="form-group">
-                            <label className="col-sm-2 form-field-label-style">Password</label>
-                            <div className="col-sm-10">
-                                <input type="text" className="form-control" name="password" placeholder="eg: abc@123"
-                                    onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.password)} value={user.password?.value} />
-                                <ShowErrorMessage field={user.password} />
-                            </div>
+                    </div>
+                    <br />
+                    <div className="form-group input-style">
+                        <label className="form-field-label-style">Password</label>
+                        <div>
+                            <input type="text" className="form-control" name="password" placeholder="eg: abc@123"
+                                onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.password)} value={user.password?.value} />
+                            <ShowErrorMessage field={user.password} />
                         </div>
                     </div>
                     <br />
                     <div className="form-group text-center">
-                        <button type="submit" className="btn add-form-button-style"
-                            onClick={(event) => onLoginClick(event)}>
+                        <button type="submit" ref={registerButton} className="btn add-form-button-style resgiter-button-style"
+                            onClick={(event) => onLoginClick(event)} onMouseOver={() => onHoverRegisterButton()}>
                             Login
                         </button>
                     </div>

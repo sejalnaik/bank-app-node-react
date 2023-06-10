@@ -1,5 +1,5 @@
 // Take db of index.js from models folder.
-const db = require("../models/transaction")
+const db = require("../models/index")
 
 // Import uuid.
 const uuid = require("uuid")
@@ -38,7 +38,7 @@ class Transaction {
         if (!this.type) {
             throw new CustomError.BadRequestError("Type must be specified")
         }
-        if (type != "Deposit" || type != "Withdraw" || type != "Transfer") {
+        if (this.type != "Deposit" && this.type != "Withdraw" && this.type != "Transfer") {
             throw new CustomError.BadRequestError("Type is not appropriate")
         }
 
@@ -51,8 +51,8 @@ class Transaction {
         }
 
         // To account id.
-        if (!this.toAccountID) {
-            throw new CustomError.BadRequestError("To account id must be specified")
+        if (this.type == "Transfer" && !this.toAccountID) {
+            throw new CustomError.BadRequestError("To account id cannot be nil if transaction type is transfer")
         }
         if (this.toAccountID == uuid.NIL) {
             throw new CustomError.BadRequestError("To account id cannot be nil")
@@ -62,11 +62,16 @@ class Transaction {
         if (!this.amount) {
             throw new CustomError.BadRequestError("Amount must be specified")
         }
-        if (this.amount < 500) {
-            throw new CustomError.BadRequestError("Amount cannot be less than 500")
+        if (this.amount < 1) {
+            throw new CustomError.BadRequestError("Amount cannot be less than 1")
         }
         if (this.amount > 100000000000) {
             throw new CustomError.BadRequestError("Amount cannot be more than 100000000000")
+        }
+
+        // Account id and to account id cannot be same.
+        if (this.accountID == this.toAccountID) {
+            throw new CustomError.BadRequestError("Send and receiver account cannot be same")
         }
     }
 
@@ -124,11 +129,11 @@ class Transaction {
             let newTransaction = await db.transaction.create({
                 id: this.id,
                 type: this.type,
-                accountID: this.accountID,
-                toAccountID: this.toAccountID,
+                account_id: this.accountID,
+                to_account_id: this.toAccountID,
                 amount: this.amount,
                 closingBalance: this.closingBalance,
-                createdBy: uuid.NIL,
+                createdBy: this.createdBy,
                 updatedBy: uuid.NIL
             }, {
                 transaction: transaction
