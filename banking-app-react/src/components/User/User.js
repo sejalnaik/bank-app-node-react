@@ -130,7 +130,7 @@ const User = () => {
     // Get users.
     const getUsers = async () => {
         try {
-            const response = await getUsersService(user)
+            const response = await getUsersService(userSearchObject)
             setUsers(response.data)
         } catch (error) {
             console.error(error)
@@ -201,7 +201,7 @@ const User = () => {
     const validateForm = () => {
 
         // Remove zero values.
-        removeZeroValue(user)
+        removeZeroValueFromUser(user)
 
         // Validate first name.
         if (!user.firstName.value) {
@@ -318,8 +318,13 @@ const User = () => {
         userSearchObject.firstName = firstNameSearch.current.value
         userSearchObject.lastName = lastNameSearch.current.value
         userSearchObject.email = emailSearch.current.value
-        userSearchObject.isAdmin = isAdminSearch.current.value
-        removeZeroValueFiled(userSearchObject)
+        if (isAdminSearch.current.value == 'true') {
+            userSearchObject.isAdmin = true
+        }
+        if (isAdminSearch.current.value == 'false') {
+            userSearchObject.isAdmin = false
+        }
+        removeZeroValueField(userSearchObject)
         if (Object.keys(userSearchObject).length > 0) {
             setIsSearched(true)
         }
@@ -400,7 +405,7 @@ const User = () => {
     // ************************************ OTHER FUNCTIONS ********************************************
 
     // Remove zero values from fields of object.
-    const removeZeroValue = obj => {
+    const removeZeroValueFromUser = obj => {
         for (let key in obj) {
             if (key == "totalBalance") {
                 continue
@@ -412,7 +417,7 @@ const User = () => {
     }
 
     // Remove zero values from fields of object.
-    const removeZeroValueFiled = obj => {
+    const removeZeroValueField = obj => {
         for (let key in obj) {
             if (obj[key] === "" || obj[key] === 0) {
                 delete obj[key]
@@ -430,62 +435,84 @@ const User = () => {
                     {/* Add user button */}
                     <button onClick={onAddUserButtonClick} className="btn btn-default add-button-style">ADD USER</button>
 
+                    {/* View all button */}
+                    {isSearched && (
+                        <>
+                            &nbsp;&nbsp;&nbsp;
+                            <button onClick={onViewAllClick} className="btn btn-default add-button-style">VIEW ALL</button>
+                        </>
+                    )}
+
                     {/* Pagination */}
                     <div className="header-left-style">
-                        yay
+                        pagination
                     </div>
                 </div>
                 <br />
                 <div className="header-style">
 
                     {/* Search */}
-                    <label className="form-field-label-style">First Name: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
+                        <label className="form-field-label-style display-flex-style">First Name: </label>
                         <input type="text" className="form-control" placeholder="eg: Sejal" ref={firstNameSearch} />
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <label className="form-field-label-style">Last Name: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
+                        <label className="form-field-label-style display-flex-style">Last Name: </label>
                         <input type="text" className="form-control" placeholder="eg: Naik" ref={lastNameSearch} />
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <label className="form-field-label-style">Email: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
+                        <label className="form-field-label-style display-flex-style">Email: </label>
                         <input type="text" className="form-control" placeholder="eg: sejal@gmail.com" ref={emailSearch} />
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <label className="form-field-label-style">Is Admin: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
-                        <input className="form-check-input" type="checkbox" ref={isAdminSearch} />
+                        <label className="form-field-label-style display-flex-style">Is Admin: </label>
+                        <select className="form-control" ref={isAdminSearch} >
+                            <option value={"null"}>Select</option>
+                            <option value={true}>Yes</option>
+                            <option value={false}>No</option>
+                        </select>
+                        {/* <input className="form-check-input" type="checkbox" ref={isAdminSearch} /> */}
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <button onClick={onSearchClick} className="btn btn-default add-button-style">SEARCH</button>
+                    <button onClick={onSearchClick} className="btn btn-default add-button-style margin-top-auto-style">SEARCH</button>
                     &nbsp;&nbsp;&nbsp;
-                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style">RESET</button>
+                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style margin-top-auto-style">RESET</button>
                 </div>
                 <br /><br />
 
-                {/* Table of users */}
-                <table className="table table-style">
-                    <thead>
-                        <tr>
-                            <th scope="col">Sr No</th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Role</th>
-                            <th scope="col">Balance</th>
-                            <th scope="col">No of accounts</th>
-                            <th scope="col">Update</th>
-                            <th scope="col">Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rowsOfUser}
-                    </tbody>
-                </table>
+                {/* No records found */}
+                {users.length == 0 && (
+                    <>
+                        <div className='no-record-found-style'>
+                            No Users Found
+                        </div>
+                    </>
+                )}
+
+                {users.length > 0 && (
+                    <>
+                        {/* Table of users */}
+                        <table className="table table-style">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Sr No</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">Balance</th>
+                                    <th scope="col">No of accounts</th>
+                                    <th scope="col">Update</th>
+                                    <th scope="col">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rowsOfUser}
+                            </tbody>
+                        </table>
+                    </>
+                )}
 
                 {/* Add/update user modal */}
                 <Modal
@@ -537,15 +564,19 @@ const User = () => {
                                             <ShowErrorMessage field={user.email} />
                                         </div>
                                     </div>
-                                    <br /><br /><br />
-                                    <div className="form-group">
-                                        <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Password</label>
-                                        <div className="col-sm-10">
-                                            <input type="text" className="form-control" name="password" placeholder="eg: abc@123"
-                                                onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.password)} value={user.password?.value} />
-                                            <ShowErrorMessage field={user.password} />
-                                        </div>
-                                    </div>
+                                    {isAddOperation && (
+                                        <>
+                                            <br /><br /><br />
+                                            <div className="form-group">
+                                                <label className="col-sm-2 form-field-label-style"><span className='red'>*</span>Password</label>
+                                                <div className="col-sm-10">
+                                                    <input type="text" className="form-control" name="password" placeholder="eg: abc@123"
+                                                        onChange={onUserFieldChange} onClick={() => setTouchStateOnClick(user.password)} value={user.password?.value} />
+                                                    <ShowErrorMessage field={user.password} />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <br /><br /><br />
                                     <div className="form-group">
                                         <div className="col-sm-2 form-field-label-style">Is Admin?</div>

@@ -16,16 +16,22 @@ const CustomError = require('../../../errors')
 // Take db of index.js from models folder.
 const db = require("../../../models/index");
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
 // Create function for get all accounts.
-const getAllAccounts = async () => {
+const getAllAccounts = async (params) => {
 
     // Start new transaction.
     const transaction = await db.sequelize.transaction()
 
     try {
 
+        // Format the search queries.
+        const searchQueries = addSearchQueries(params)
+
         // Create bucket for storing all accounts after getting it from view.
-        const allAccounts = await Account.getAllAccounts(transaction)
+        const allAccounts = await Account.getAllAccounts(transaction, searchQueries)
 
         // If no accounts found then send empty array.
         if (!allAccounts) {
@@ -234,11 +240,44 @@ const deleteAccount = async (accountObj) => {
     try {
 
         // Check if deleted by exists in db.
-        const checkUser = User.createBlankUserWithID(bankObj.deletedBy)
-        const userForExists = await checkUser.getUserByID(transaction)
+        const checkUser = User.createBlankUserWithID(accountObj.deletedBy)
+        const loggedInuUserForExists = await checkUser.getUserByID(transaction)
+        if (!loggedInuUserForExists) {
+            throw new CustomError.BadRequestError("User not found")
+        }
+
+        // Get the account from db.
+        const account = Account.createBlankAccountWithID(accountObj.id)
+        const accountForExists = await account.getAccountByID(transaction)
+        if (!accountForExists) {
+            throw new CustomError.BadRequestError("Account not found")
+        }
+
+        // Delete the transactions.
+        await Transaction.deleteTransactions(transaction, accountObj.id, accountObj.deletedBy)
+
+        // Get the bank.
+        const bank = Bank.createBlankBankWithID(accountForExists.bank_id)
+        const bankForExists = await bank.getBankByID(transaction)
+        if (!bankForExists) {
+            throw new CustomError.BadRequestError("Bank not found")
+        }
+
+        // Update the bank by deducting the balance of the account.
+        const bankForUpdate = Bank.createBankWithID(bankForExists.id, bankForExists.name, bankForExists.abbrevieation, bankForExists.balance - accountForExists.balance)
+        await bankForUpdate.updateBank(transaction)
+
+        // Get the user.
+        const user = User.createBlankUserWithID(accountForExists.user_id)
+        const userForExists = await user.getUserByID(transaction)
         if (!userForExists) {
             throw new CustomError.BadRequestError("User not found")
         }
+
+        // Update the user by deducting the balance of the account.
+        const userForUpdate = User.createUserWithID(userForExists.id, userForExists.firstName, userForExists.lastName,
+            userForExists.email, userForExists.totalBalance - accountForExists.balance, userForExists.isAdmin, userForExists.password)
+        await userForUpdate.updateUser(transaction)
 
         // Create bucket for storing deleted account after getting it from view.
         let deleteAccount = await accountObj.deleteAccount(transaction)
@@ -257,6 +296,29 @@ const deleteAccount = async (accountObj) => {
         // Return error.
         throw error
     }
+}
+
+// Add search queries to query.
+const addSearchQueries = (params) => {
+
+    // Create bucket for where query.
+    let where = {}
+
+    // Bank id.
+    if (params.bankID) {
+        where.bank_id = {
+            [Op.eq]: params.bankID
+        }
+    }
+
+    // User id.
+    if (params.userID) {
+        where.user_id = {
+            [Op.eq]: params.userID
+        }
+    }
+
+    return where
 }
 
 // Export all the functions.

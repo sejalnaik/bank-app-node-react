@@ -6,6 +6,7 @@ import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
 import { addTransaction as addTransactionService } from '../../service/Transaction/Transaction'
 import { getAccounts as getAccountsService } from '../../service/Account/Account'
+import { getLocalStorage as getLocalStorageService } from '../../service/Utility/LocalStorage'
 
 const Transaction = () => {
 
@@ -22,6 +23,9 @@ const Transaction = () => {
 
     // Variable for setting add or update form.
     const [operation, setOperation] = useState()
+
+    // Variable for setting selected account.
+    const [selectedAccount, setSelectedAccount] = useState()
 
     // Variable for add or update object for sending to api.
     let transactionForAdd = {}
@@ -113,12 +117,27 @@ const Transaction = () => {
     // On change in any transaction field.
     const onTransactionFieldChange = (event) => {
 
+        // If field is account id then set the selected account.
+        if (event.target.name == "accountID") {
+            setSelectedAccountOnAccountChange(event.target.value)
+        }
+
         // Get the name and value of element.
         const name = event.target.name
         let value = event.target.value
 
         // Set the transaction by sending function.
         setTransaction(values => ({ ...values, [name]: { value: value, error: null, touched: true } }))
+    }
+
+    // On account change set the selected account.
+    const setSelectedAccountOnAccountChange = (accountID) => {
+        for (let i = 0; i < accountList.length; i++) {
+            if (accountList[i].id == accountID) {
+                setSelectedAccount(accountList[i])
+                return
+            }
+        }
     }
 
     // Validate transaction form.
@@ -151,6 +170,9 @@ const Transaction = () => {
             }
             if (transaction.amount.value > 100000000000) {
                 transaction.amount.error = "Amount cannot be more than 100000000000"
+            }
+            if ((transaction.type.value == "Withdraw" || transaction.type.value == "Transfer") && transaction.amount.value > selectedAccount.balance) {
+                transaction.amount.error = "Amount exceeding balance"
             }
         }
 
@@ -275,13 +297,23 @@ const Transaction = () => {
 
     // Render options of select for account list.
     const optionsForAccountList = Object.values(accountList).map((account) => {
-        if (account.bank) {
+        if (!account.bank) {
+            return (
+                <option key={account.id} value={account.id}>{account.accountNumber}</option>
+            )
+        }
+        if (operation == null && account.bank && account.user?.id == getLocalStorageService("userID")) {
+            return (
+                <option key={account.id} value={account.id}>{account.accountNumber} - {account.bank?.name} - {account.user?.firstName + " " + account.user?.lastName}</option>
+            )
+        }
+        if (operation != null && account.bank) {
             return (
                 <option key={account.id} value={account.id}>{account.accountNumber} - {account.bank?.name} - {account.user?.firstName + " " + account.user?.lastName}</option>
             )
         }
         return (
-            <option key={account.id} value={account.id}>{account.accountNumber}</option>
+            <></>
         )
     })
 
@@ -319,6 +351,13 @@ const Transaction = () => {
                     <form>
                         <div className="form-group">
                             <label className="form-field-label-style account-text-style">Account</label>
+                            {(selectedAccount && selectedAccount.id != "") && (
+                                <>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <label className="form-field-label-style account-text-style">: {selectedAccount?.balance}</label>
+                                </>
+                            )}
+
                             <div className="input-style">
                                 <select className="form-control" name="accountID" onChange={onTransactionFieldChange} value={transaction.accountID?.value}
                                     onClick={() => setTouchStateOnClick(transaction.accountID)}>

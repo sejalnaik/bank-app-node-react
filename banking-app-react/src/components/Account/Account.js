@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { addAccount as addAccountService, getAccounts as getAccountsService, updateAccount as updateAccountService, deleteAccount as deleteAccountService } from '../../service/Account/Account'
 import { getBanks as getBanksService } from '../../service/Bank/Bank'
+import { getUsers as getUsersService } from '../../service/User/User'
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
-import Create from '@mui/icons-material/Create';
+// import Create from '@mui/icons-material/Create';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
 import { getLocalStorage as getLocalStorageService } from '../../service/Utility/LocalStorage'
+import MenuBook from '@mui/icons-material/MenuBook';
+import { useNavigate } from "react-router-dom";
 
 const Account = () => {
 
@@ -27,6 +30,9 @@ const Account = () => {
     // Variable for bank list add and its setter.
     const [bankList, setBankList] = useState([])
 
+    // Variable for user list add and its setter.
+    const [userList, setUserList] = useState([])
+
     // Variable for add or update object for sending to api.
     let accountForAddUpdate = {}
 
@@ -35,6 +41,21 @@ const Account = () => {
 
     // Create isAdmin after getting it from local storage.
     let isAdmin = getLocalStorageService("isAdmin")
+
+    // Variable for bank id search.
+    const bankIDSearch = useRef()
+
+    // Variable for user id search.
+    const userIDSearch = useRef()
+
+    // Search varibale for sending search to api.
+    let accountSearchObject = {}
+
+    // Search boolean for saving if is searched state.
+    const [isSearched, setIsSearched] = useState(false)
+
+    // Variable for navigation.
+    const navigate = useNavigate()
 
     // ************************************ ADD ACCOUNT MODAL POPUP ********************************************
 
@@ -99,6 +120,9 @@ const Account = () => {
 
         // Get bank list.
         getBankList()
+
+        // Get user list.
+        getUserList()
     }, [])
 
     // ************************************ CRUD FUNCTIONS FOR ACCOUNT ********************************************
@@ -125,7 +149,10 @@ const Account = () => {
     // Get accounts.
     const getAccounts = async () => {
         try {
-            const response = await getAccountsService(account)
+            if (isAdmin == "false") {
+                accountSearchObject.userID = userID
+            }
+            const response = await getAccountsService(accountSearchObject)
             setAccounts(response.data)
         } catch (error) {
             console.error(error)
@@ -191,7 +218,7 @@ const Account = () => {
     const validateForm = () => {
 
         // Remove zero values.
-        removeZeroValue(account)
+        removeZeroValueFromAccount(account)
 
         // Validate bankID.
         if (!account.bankID.value) {
@@ -291,11 +318,66 @@ const Account = () => {
     const getBankList = async () => {
         try {
             const response = await getBanksService()
-            response.data.unshift({ id: "", name: "Select" })
+            response.data.unshift({ id: "null", name: "Select" })
             setBankList(response.data)
         } catch (error) {
             console.error(error)
         }
+    }
+
+    // Get users.
+    const getUserList = async () => {
+        try {
+            const response = await getUsersService()
+            response.data.unshift({ id: "null", name: "Select" })
+            setUserList(response.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    // ************************************ SEARCH DEFINITIONS ********************************************
+
+    // On search button click.
+    const onSearchClick = (event) => {
+        accountSearchObject.bankID = bankIDSearch.current.value
+        if (isAdmin == "true" && userIDSearch.current) {
+            accountSearchObject.userID = userIDSearch.current.value
+        }
+        if (bankIDSearch.current.value == 'null') {
+            accountSearchObject.bankID = null
+        }
+        if (isAdmin == "true" && userIDSearch.current.value == 'null') {
+            accountSearchObject.userID = null
+        }
+        removeZeroValueField(accountSearchObject)
+        if (Object.keys(accountSearchObject).length > 0) {
+            setIsSearched(true)
+        }
+        if (Object.keys(accountSearchObject).length == 0) {
+            setIsSearched(false)
+        }
+        getAccounts()
+    }
+
+    // On reset search button click.
+    const onResetSearchClick = () => {
+        bankIDSearch.current.value = null
+        if (isAdmin == "true") {
+            userIDSearch.current.value = null
+        }
+        accountSearchObject = {}
+    }
+
+    // On view all button click.
+    const onViewAllClick = () => {
+        bankIDSearch.current.value = null
+        if (isAdmin == "true") {
+            userIDSearch.current.value = null
+        }
+        accountSearchObject = {}
+        setIsSearched(false)
+        getAccounts()
     }
 
     // ************************************ COMPONENT RENDER FUNCTIONS ********************************************
@@ -338,10 +420,10 @@ const Account = () => {
                 <td>{index + 1}</td>
                 <td>{account.accountNumber}</td>
                 <td>{account.bank?.name}</td>
-                <td>{account.user?.firstName + " " + account.user?.lastName}</td>
+                {isAdmin == "true" ? <td>{account.user?.firstName + " " + account.user?.lastName}</td> : <></>}
                 <td>{account.balance}</td>
-                {isAdmin == "false" ? <td>lala</td> : <></>}
-                {isAdmin == "true" ? <td><Delete className='cursor-pointer' onClick={() => { onAccountDeleteButtonClick(account.id) }}></Delete></td> : <></>}
+                {isAdmin == "false" ? <td><MenuBook className='cursor-pointer' onClick={() => { navigateToPassbook(account.id) }}></MenuBook></td> : <></>}
+                <td><Delete className='cursor-pointer' onClick={() => { onAccountDeleteButtonClick(account.id) }}></Delete></td>
                 {/* <td><Create className='cursor-pointer' onClick={() => { onAccountUpdateIconClick(account) }}></Create></td> */}
             </tr>
         )
@@ -354,15 +436,41 @@ const Account = () => {
         )
     })
 
+    // Render options of select for user list.
+    const optionsForUserList = Object.values(userList).map((user, index) => {
+        if (user.firstName) {
+            return (
+                <option key={user.id} value={user.id}>{user.firstName + " " + user.lastName + " - " + user.email}</option>
+            )
+        }
+        return (
+            <option key={user.id} value={user.id}>{user.name}</option>
+        )
+    })
+
     // ************************************ OTHER FUNCTIONS ********************************************
 
     // Remove zero values from fields of object.
-    const removeZeroValue = obj => {
+    const removeZeroValueFromAccount = obj => {
         for (let key in obj) {
             if (obj[key].value === "" || obj[key].value === 0) {
                 obj[key].value = null
             }
         }
+    }
+
+    // Remove zero values from fields of object.
+    const removeZeroValueField = obj => {
+        for (let key in obj) {
+            if (obj[key] === "" || obj[key] === 0) {
+                delete obj[key]
+            }
+        }
+    }
+
+    // Navigate to passbook.
+    const navigateToPassbook = (accountID) => {
+        navigate(`/passbook/${accountID}`)
     }
 
     return (
@@ -375,31 +483,80 @@ const Account = () => {
                     {/* Add account button */}
                     {isAdmin == "false" ? <button onClick={onAddAccountButtonClick} className="btn btn-default add-button-style">ADD ACCOUNT</button> : <></>}
 
+                    {/* View all button */}
+                    {isSearched && (
+                        <>
+                            {isAdmin == "false" && (
+                                <>
+                                    &nbsp;&nbsp;&nbsp;
+                                </>
+                            )}
+                            <button onClick={onViewAllClick} className="btn btn-default add-button-style">VIEW ALL</button>
+                        </>
+                    )}
+
                     {/* Pagination */}
                     <div className="header-left-style">
-                        yay
+                        pagination
                     </div>
+                </div>
+                <br />
+                <div className="header-style">
+
+                    {/* Search */}
+                    <div>
+                        <label className="form-field-label-style display-flex-style">Bank: </label>
+                        <select className="form-control" ref={bankIDSearch}>
+                            {optionsForBankList}
+                        </select>
+                    </div>
+                    {isAdmin == "true" ?
+                        <>&nbsp;&nbsp;&nbsp;
+                            <div>
+                                <label className="form-field-label-style display-flex-style">User: </label>
+                                <select className="form-control" ref={userIDSearch}>
+                                    {optionsForUserList}
+                                </select>
+                            </div>
+                        </> : <></>}
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onSearchClick} className="btn btn-default add-button-style margin-top-auto-style">SEARCH</button>
+                    &nbsp;&nbsp;&nbsp;
+                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style margin-top-auto-style">RESET</button>
                 </div>
                 <br /><br />
 
-                {/* Table of accounts */}
-                <table className="table table-style">
-                    <thead>
-                        <tr>
-                            <th scope="col">Sr No</th>
-                            <th scope="col">Account Number</th>
-                            <th scope="col">Bank</th>
-                            <th scope="col">User</th>
-                            <th scope="col">Balance</th>
-                            {isAdmin == "false" ? <th scope="col">Show Passbook</th> : <></>}
-                            {/* <th scope="col">Update</th> */}
-                            {isAdmin == "true" ? <th scope="col">Delete</th> : <></>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rowsOfAccount}
-                    </tbody>
-                </table>
+                {/* No records found */}
+                {accounts.length == 0 && (
+                    <>
+                        <div className='no-record-found-style'>
+                            No Accounts Found
+                        </div>
+                    </>
+                )}
+
+                {accounts.length > 0 && (
+                    <>
+                        {/* Table of accounts */}
+                        <table className="table table-style">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Sr No</th>
+                                    <th scope="col">Account Number</th>
+                                    <th scope="col">Bank</th>
+                                    {isAdmin == "true" ? <th scope="col">User</th> : <></>}
+                                    <th scope="col">Balance</th>
+                                    {isAdmin == "false" ? <th scope="col">Show Passbook</th> : <></>}
+                                    {/* <th scope="col">Update</th> */}
+                                    <th scope="col">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rowsOfAccount}
+                            </tbody>
+                        </table>
+                    </>
+                )}
 
                 {/* Add/update account modal */}
                 <Modal

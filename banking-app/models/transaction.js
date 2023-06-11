@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'account_id',
           type: DataTypes.UUID
-        }
+        },
+        as: "account"
       });
       transaction.belongsTo(models.account, {
         onDelete: 'RESTRICT',
@@ -24,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: {
           name: 'to_account_id',
           type: DataTypes.UUID
-        }
+        },
+        as: "toAccount"
       })
     }
   }

@@ -21,7 +21,7 @@ const getAllTransactions = async (req, resp, next) => {
     try {
 
         // Create bucket for storing all transactions after getting it from service.
-        let allTransactions = await getAllTransactionsService()
+        let allTransactions = await getAllTransactionsService(req.query)
 
         // If no transactions then send record not found error.
         if (!allTransactions) {

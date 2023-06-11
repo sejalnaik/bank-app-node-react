@@ -1,5 +1,6 @@
 import React from 'react'
 import { getLocalStorage as getLocalStorageService } from '../../service/Utility/LocalStorage'
+import sbiLogo from '../../assets/images/sbi-logo.jpg';
 
 const Dashboard = () => {
 
@@ -14,6 +15,7 @@ const Dashboard = () => {
                 <div className='dashboard-welcome-style'>
                     Welcome, {fullName}
                 </div>
+                <img src={sbiLogo} alt="Logo" />
             </div>
         </>
     )

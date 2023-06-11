@@ -49,13 +49,14 @@
 .background-style {
   background-color: #9d45e0;
   color: white;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .add-button-style {
   background-color: white;
   color: purple;
   font-weight: bold;
+  height: fit-content;
 }
 
 .add-button-style:hover {
@@ -203,5 +204,25 @@
 .account-text-style {
   color: white;
   font-size: xxx-large;
+  font-weight: bold;
+}
+
+.display-flex-style {
+  display: flex;
+}
+
+.margin-top-auto-style {
+  margin-top: auto;
+}
+
+.no-record-found-style {
+  font-size: xxx-large;
+  font-weight: bold;
+  color: purple;
+  background-color: white;
+}
+
+.total-balance-style {
+  font-size: x-large;
   font-weight: bold;
 }

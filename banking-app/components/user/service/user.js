@@ -7,6 +7,12 @@ const db = require("../../../models")
 // Import custom error.
 const CustomError = require('../../../errors')
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
+// Import bcrypt.
+const bcrypt = require('bcryptjs');
+
 // Create function for get all users.
 const getAllUsers = async (params) => {
 
@@ -81,6 +87,9 @@ const createUser = async (userObj) => {
     const transaction = await db.sequelize.transaction()
 
     try {
+
+        // Hash the password.
+        userObj.password = await hashPassword(userObj.password)
 
         // Check if user email exists.
         const user = await userObj.getUserByEmail(transaction)
@@ -250,6 +259,12 @@ const addSearchQueries = (params) => {
     }
 
     return where
+}
+
+// Encrypt the password.
+async function hashPassword(passowrdToBeEncrypted) {
+    const hash = await bcrypt.hash(passowrdToBeEncrypted, 10)
+    return hash
 }
 
 // Export all the functions.

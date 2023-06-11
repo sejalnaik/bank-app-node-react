@@ -86,7 +86,7 @@ const Bank = () => {
 
     // Validate bank.
     useEffect(() => {
-        // console.log(banks)
+        console.log(banks)
     }, [banks])
 
     // Initial functions.
@@ -283,7 +283,7 @@ const Bank = () => {
     const onSearchClick = (event) => {
         bankSearchObject.name = nameSearch.current.value
         bankSearchObject.abbrevieation = abbrevieationSearch.current.value
-        removeZeroValueFiled(bankSearchObject)
+        removeZeroValueField(bankSearchObject)
         if (Object.keys(bankSearchObject).length > 0) {
             setIsSearched(true)
         }
@@ -372,7 +372,7 @@ const Bank = () => {
     }
 
     // Remove zero values from fields of object.
-    const removeZeroValueFiled = obj => {
+    const removeZeroValueField = obj => {
         for (let key in obj) {
             if (obj[key] === "" || obj[key] === 0) {
                 delete obj[key]
@@ -400,48 +400,59 @@ const Bank = () => {
 
                     {/* Pagination */}
                     <div className="header-left-style">
-                        yay
+                        yapaginationy
                     </div>
                 </div>
                 <br />
                 <div className="header-style">
 
                     {/* Search */}
-                    <label className="form-field-label-style">Name: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
+                        <label className="form-field-label-style display-flex-style">Name: </label>
                         <input type="text" className="form-control" placeholder="eg: Yes Bank" ref={nameSearch} />
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <label className="form-field-label-style">Abbrevieation: </label>
-                    &nbsp;&nbsp;&nbsp;
                     <div>
+                        <label className="form-field-label-style display-flex-style">Abbrevieation: </label>
                         <input type="text" className="form-control" placeholder="eg: YB" ref={abbrevieationSearch} />
                     </div>
                     &nbsp;&nbsp;&nbsp;
-                    <button onClick={onSearchClick} className="btn btn-default add-button-style">SEARCH</button>
+                    <button onClick={onSearchClick} className="btn btn-default add-button-style margin-top-auto-style">SEARCH</button>
                     &nbsp;&nbsp;&nbsp;
-                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style">RESET</button>
+                    <button onClick={onResetSearchClick} className="btn btn-default add-button-style margin-top-auto-style">RESET</button>
                 </div>
                 <br /><br />
 
-                {/* Table of banks */}
-                <table className="table table-style">
-                    <thead>
-                        <tr>
-                            <th scope="col">Sr No</th>
-                            <th scope="col">Name</th>
-                            <th scope="col">Abbrevieation</th>
-                            <th scope="col">Balance</th>
-                            <th scope="col">Count of accounts</th>
-                            <th scope="col">Update</th>
-                            <th scope="col">Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rowsOfBank}
-                    </tbody>
-                </table>
+                {/* No records found */}
+                {banks.length == 0 && (
+                    <>
+                        <div className='no-record-found-style'>
+                            No Banks Found
+                        </div>
+                    </>
+                )}
+
+                {banks.length > 0 && (
+                    <>
+                        {/* Table of banks */}
+                        <table className="table table-style">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Sr No</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Abbrevieation</th>
+                                    <th scope="col">Balance</th>
+                                    <th scope="col">Count of accounts</th>
+                                    <th scope="col">Update</th>
+                                    <th scope="col">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rowsOfBank}
+                            </tbody>
+                        </table>
+                    </>
+                )}
 
                 {/* Add/update bank modal */}
                 <Modal

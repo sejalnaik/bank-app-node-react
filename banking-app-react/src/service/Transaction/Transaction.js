@@ -16,11 +16,11 @@ export const addTransaction = async (transaction) => {
 }
 
 // Get transactions.
-export const getTransactions = async () => {
+export const getTransactions = async (params) => {
     try {
         const authorization = getLocalStorageService("authorization")
         const response = await axios.get(`${constants.BASE_URL}/transaction`, {
-            headers: { "Content-type": "application/json", "authorization": authorization }
+            headers: { "Content-type": "application/json", "authorization": authorization }, params: params
         })
         return response
     } catch (error) {

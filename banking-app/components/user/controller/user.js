@@ -10,6 +10,9 @@ const User = require('../../../view/user');
 // Import the jwt class from middleware.
 const JwtToken = require('../../../middleware/jwt')
 
+// Import bcrypt.
+const bcrypt = require('bcryptjs');
+
 // Import the functions from user service.
 const {
     getAllUsers: getAllUsersService,
@@ -239,7 +242,8 @@ const login = async (req, res, next) => {
         }
 
         // If password is wrong.
-        if (newUser.password != user.password) {
+        result = await comparePassword(user.password, newUser.password)
+        if (!result) {
             throw new CustomError.BadRequestError("Password is wrong")
         }
 
@@ -295,6 +299,12 @@ const logout = async (req, res, next) => {
         console.log(error)
         next(error)
     }
+}
+
+// Compare the password from database and user.
+async function comparePassword(plaintextPassword, hashPassowrd) {
+    const result = await bcrypt.compare(plaintextPassword, hashPassowrd)
+    return result
 }
 
 // Export all the fucntions.

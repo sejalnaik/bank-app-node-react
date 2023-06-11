@@ -23,7 +23,7 @@ const getAllAccounts = async (req, resp, next) => {
     try {
 
         // Create bucket for storing all accounts after getting it from service.
-        let allAccounts = await getAllAccountsService()
+        let allAccounts = await getAllAccountsService(req.query)
 
         // If no accounts then send record not found error.
         if (!allAccounts) {

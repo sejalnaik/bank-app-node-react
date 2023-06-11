@@ -63,11 +63,12 @@ class Account {
     }
 
     // Create function for getting all accounts. 
-    static async getAllAccounts(transaction) {
+    static async getAllAccounts(transaction, searchQueries) {
         try {
 
             // Create bucket for all accounts and fetch it form db.
             let allAccounts = await db.account.findAll({
+                where: searchQueries,
                 include: [
                     {
                         model: db.bank,
@@ -208,6 +209,29 @@ class Account {
 
             // Return the bucket.
             return deleteAccount
+
+        } catch (error) {
+
+            // Return the error.
+            throw error
+        }
+    }
+
+    // Create function for deleting multiple accounts. 
+    static async deleteAccounts(transaction, searchQueries, deletedBy) {
+        try {
+
+            // Create bucket for one account and delete it from db.
+            await db.account.update({
+                deletedAt: new Date(),
+                deletedBy: deletedBy
+            },
+                {
+                    where: searchQueries,
+                },
+                {
+                    transaction: transaction
+                })
 
         } catch (error) {
 

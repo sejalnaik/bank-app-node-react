@@ -22,6 +22,7 @@ import Login from './components/Login/Login';
 import { getLocalStorage as getLocalStorageService } from './service/Utility/LocalStorage'
 import Redirect from './components/Shared/Redirect';
 import Transaction from './components/Transaction/Transaction';
+import Passbook from './components/Transaction/Passbook';
 
 function App() {
 
@@ -52,6 +53,7 @@ function App() {
             <Route exact path='/dashboard' element={<Dashboard />} />
             <Route exact path='/' element={<Dashboard />} />
             <Route exact path='/transaction' element={<Transaction />} />
+            <Route exact path="/passbook/:accountID" element={<Passbook />} />
           </>
         ) : (
 
@@ -73,6 +75,7 @@ function App() {
               <Route exact path="/user" element={<Redirect />} />
               <Route exact path="/dashboard" element={<Redirect />} />
               <Route exact path="/transaction" element={<Redirect />} />
+              <Route exact path="/passbook" element={<Redirect />} />
             </>
           )
         }

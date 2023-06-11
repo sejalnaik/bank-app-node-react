@@ -76,16 +76,33 @@ class Transaction {
     }
 
     // Create function for getting all transactions. 
-    static async getAllTransactions(transaction) {
+    static async getAllTransactions(transaction, searchQueries) {
         try {
 
             // Create bucket for all transactions and fetch it form db.
             let allTransactions = await db.transaction.findAll({
-                // include: [
-                //     {
-                //         model: db.account,
-                //     },
-                // ],
+                order: ["createdAt"],
+                where: searchQueries,
+                include: [
+                    {
+                        model: db.account,
+                        as: "account",
+                        include: [
+                            {
+                                model: db.user,
+                            }
+                        ],
+                    },
+                    {
+                        model: db.account,
+                        as: "toAccount",
+                        include: [
+                            {
+                                model: db.user,
+                            }
+                        ],
+                    },
+                ],
             }, {
                 transaction: transaction
             })
@@ -141,6 +158,30 @@ class Transaction {
 
             // Return the bucket.
             return newTransaction
+
+        } catch (error) {
+
+            // Return the error.
+            throw error
+        }
+    }
+
+    // Create function for deleting multiple transactions. 
+    static async deleteTransactions(transaction, accountID, deletedBy) {
+        try {
+
+            // Create bucket for one account and delete it from db.
+            await db.transaction.update({
+                deletedAt: new Date(),
+                deletedBy: deletedBy
+            },
+                {
+                    where: {
+                        account_id: accountID
+                    }
+                }, {
+                transaction: transaction
+            })
 
         } catch (error) {
 

@@ -12,22 +12,30 @@ const CustomError = require('../../../errors')
 
 // Take db of index.js from models folder.
 const db = require("../../../models/index");
+
+// Take account class of index.js from transaction folder.
 const Account = require('../../../view/account');
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
 // Create function for get all transactions.
-const getAllTransactions = async () => {
+const getAllTransactions = async (params) => {
 
     // Start new transaction.
     const transaction = await db.sequelize.transaction()
 
     try {
 
-        // Create bucket for storing all transactions after getting it from view.
-        const allTransactions = await Transaction.getAllTransactions(transaction)
+        // Format the search queries.
+        const searchQueries = addSearchQueries(params)
 
-        // If no transactions found then send error.
-        if (!allTransactionss || (allTransactionss && allTransactionss.length == 0)) {
-            throw new CustomError.BadRequestError("Transactions not found")
+        // Create bucket for storing all transactions after getting it from view.
+        const allTransactions = await Transaction.getAllTransactions(transaction, searchQueries)
+
+        // If no transactions found then send empty array.
+        if (!allTransactions) {
+            allTransactions = []
         }
 
         // Commit the transaction.
@@ -91,6 +99,11 @@ const createTransaction = async (transactionObj) => {
         const accountForExists = await account.getAccountByID(transaction)
         if (!accountForExists) {
             throw new CustomError.BadRequestError("Sender account not found")
+        }
+
+        // If transaction type is withdraw or transfer and amount exceeds balance of account then send error.
+        if ((transactionObj.type == "Withdraw" || transactionObj.type == "Transfer") && transactionObj.amount > accountForExists.balance) {
+            throw new CustomError.BadRequestError("Transaction amount exceeded account balance")
         }
 
         // Check if created by exists in db.
@@ -203,7 +216,7 @@ const createTransaction = async (transactionObj) => {
             await toUserForUpdate.updateUser(transaction)
 
             // Create to transaction.
-            const toTransaction = new Transaction(transactionObj.type, transactionObj.toAccountID, null, transactionObj.amount)
+            const toTransaction = new Transaction("Deposit", transactionObj.toAccountID, null, transactionObj.amount)
 
             // Give balance of to account as closing balance of to transaction.
             toTransaction.closingBalance = toAccountForUpdate.balance
@@ -229,6 +242,22 @@ const createTransaction = async (transactionObj) => {
         // Return error.
         throw error
     }
+}
+
+// Add search queries to query.
+const addSearchQueries = (params) => {
+
+    // Create bucket for where query.
+    let where = {}
+
+    // Account id.
+    if (params.accountID) {
+        where.account_id = {
+            [Op.eq]: params.accountID
+        }
+    }
+
+    return where
 }
 
 // Export all the functions.
