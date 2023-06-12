@@ -13,6 +13,21 @@ const { Op } = require("sequelize");
 // Import bcrypt.
 const bcrypt = require('bcryptjs');
 
+// Take account class of index.js from account folder.
+const Account = require('../../../view/account');
+
+// Take user class of index.js from account folder.
+const Transaction = require('../../../view/transaction');
+
+// Take bank class of index.js from account folder.
+const Bank = require('../../../view/bank');
+
+// Import the functions from account service.
+const {
+    getAllAccounts: getAllAccountsService,
+    addSearchQueries: addSearchQueriesAccountService
+} = require("../../account/service/account");
+
 // Create function for get all users.
 const getAllUsers = async (params) => {
 
@@ -177,6 +192,38 @@ const deleteUser = async (userObj) => {
         if (!userForExists) {
             throw new CustomError.BadRequestError("User not found")
         }
+
+        // Get all the accounts for user.
+        const searchQueries = addSearchQueriesAccountService({ userID: userObj.id })
+        const allAccounts = await Account.getAllAccounts(transaction, searchQueries)
+
+        // Collect all the account ids in an array.
+        const accountIDs = []
+        for (let i = 0; i < allAccounts.length; i++) {
+            accountIDs.push(allAccounts[i].id)
+        }
+
+        // Iterate the accounts.
+        for (let i = 0; i < allAccounts.length; i++) {
+
+            // Get the bank for the account id.
+            let bank = Bank.createBlankBankWithID(allAccounts[i].bank_id)
+            let bankForExists = await bank.getBankByID(transaction)
+            if (!bankForExists) {
+                throw new CustomError.BadRequestError("Bank not found")
+            }
+
+            // Deduct the balance of account from the balance of bank.
+            const bankForUpdate = Bank.createBankWithID(bankForExists.id, bankForExists.name, bankForExists.abbrevieation, bankForExists.balance - allAccounts[i].balance)
+            bankForUpdate.updatedBy = userObj.deletedBy
+            await bankForUpdate.updateBank(transaction)
+        }
+
+        // Delete the transactions.
+        await Transaction.deleteTransactions(transaction, accountIDs, userObj.deletedBy)
+
+        // Delete the accounts.
+        await Account.deleteAccountsForUsers(transaction, [userObj.id], userObj.deletedBy)
 
         // Create bucket for storing deleted user after getting it from view.
         let deleteUser = await userObj.deleteUser(transaction)

@@ -254,7 +254,8 @@ const deleteAccount = async (accountObj) => {
         }
 
         // Delete the transactions.
-        await Transaction.deleteTransactions(transaction, accountObj.id, accountObj.deletedBy)
+        let accountIDs = [accountObj.id]
+        await Transaction.deleteTransactions(transaction, accountIDs, accountObj.deletedBy)
 
         // Get the bank.
         const bank = Bank.createBlankBankWithID(accountForExists.bank_id)
@@ -265,6 +266,7 @@ const deleteAccount = async (accountObj) => {
 
         // Update the bank by deducting the balance of the account.
         const bankForUpdate = Bank.createBankWithID(bankForExists.id, bankForExists.name, bankForExists.abbrevieation, bankForExists.balance - accountForExists.balance)
+        bankForUpdate.updatedBy = accountObj.deletedBy
         await bankForUpdate.updateBank(transaction)
 
         // Get the user.
@@ -277,6 +279,7 @@ const deleteAccount = async (accountObj) => {
         // Update the user by deducting the balance of the account.
         const userForUpdate = User.createUserWithID(userForExists.id, userForExists.firstName, userForExists.lastName,
             userForExists.email, userForExists.totalBalance - accountForExists.balance, userForExists.isAdmin, userForExists.password)
+        userForUpdate.updatedBy = accountObj.deletedBy
         await userForUpdate.updateUser(transaction)
 
         // Create bucket for storing deleted account after getting it from view.
@@ -327,5 +330,6 @@ module.exports = {
     createAccount,
     updateAccount,
     deleteAccount,
-    getAccountByID
+    getAccountByID,
+    addSearchQueries
 }

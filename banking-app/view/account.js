@@ -7,6 +7,9 @@ const uuid = require("uuid")
 // Import custom error.
 const CustomError = require('../errors')
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
 // Create account class with attributes and functions.
 class Account {
     constructor(accountNumber, balance, bankID, userID) {
@@ -217,8 +220,8 @@ class Account {
         }
     }
 
-    // Create function for deleting multiple accounts. 
-    static async deleteAccounts(transaction, searchQueries, deletedBy) {
+    // Create function for deleting multiple accounts for users. 
+    static async deleteAccountsForUsers(transaction, userIDs, deletedBy) {
         try {
 
             // Create bucket for one account and delete it from db.
@@ -227,7 +230,38 @@ class Account {
                 deletedBy: deletedBy
             },
                 {
-                    where: searchQueries,
+                    where: {
+                        user_id: {
+                            [Op.in]: userIDs
+                        }
+                    }
+                },
+                {
+                    transaction: transaction
+                })
+
+        } catch (error) {
+
+            // Return the error.
+            throw error
+        }
+    }
+
+    // Create function for deleting multiple accounts for banks. 
+    static async deleteAccountsForBanks(transaction, bankIDs, deletedBy) {
+        try {
+
+            // Create bucket for one account and delete it from db.
+            await db.account.update({
+                deletedAt: new Date(),
+                deletedBy: deletedBy
+            },
+                {
+                    where: {
+                        bank_id: {
+                            [Op.in]: bankIDs
+                        }
+                    }
                 },
                 {
                     transaction: transaction

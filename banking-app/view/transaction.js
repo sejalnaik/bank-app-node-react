@@ -7,6 +7,9 @@ const uuid = require("uuid")
 // Import custom error.
 const CustomError = require('../errors')
 
+// Import Op from sequilize.
+const { Op } = require("sequelize");
+
 // Create transaction class with attributes and functions.
 class Transaction {
     constructor(type, accountID, toAccountID, amount) {
@@ -167,7 +170,7 @@ class Transaction {
     }
 
     // Create function for deleting multiple transactions. 
-    static async deleteTransactions(transaction, accountID, deletedBy) {
+    static async deleteTransactions(transaction, accountIDs, deletedBy) {
         try {
 
             // Create bucket for one account and delete it from db.
@@ -177,7 +180,9 @@ class Transaction {
             },
                 {
                     where: {
-                        account_id: accountID
+                        account_id: {
+                            [Op.in]: accountIDs
+                        }
                     }
                 }, {
                 transaction: transaction
